@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Car radio unlock code calculators — Ford and Renault. Everything runs in your browser, no data is sent to any server." />
+  <title>Radio Code Calculators</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #131a2e;
+      --text: #e7ecf7;
+      --muted: #8a97b3;
+      --accent: #2f6bff;
+      --border: #24304d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(1200px 600px at 50% -10%, #16234a 0%, var(--bg) 60%);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .wrap { width: 100%; max-width: 560px; text-align: center; }
+    h1 { margin: 0 0 6px; font-size: 1.7rem; }
+    .sub { margin: 0 0 28px; color: var(--muted); font-size: 0.95rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 480px) { .grid { grid-template-columns: 1fr; } }
+    a.tile {
+      display: block;
+      text-decoration: none;
+      color: var(--text);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 20px;
+      transition: transform 0.12s, border-color 0.12s, box-shadow 0.12s;
+    }
+    a.tile:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.45);
+    }
+    .tile .brand { font-size: 1.3rem; font-weight: 700; margin-bottom: 6px; }
+    .tile .desc { font-size: 0.82rem; color: var(--muted); line-height: 1.4; }
+    .tile .icon { font-size: 2.2rem; margin-bottom: 10px; }
+    footer { margin-top: 28px; font-size: 0.75rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h1>Radio Code Calculators</h1>
+    <p class="sub">Choose your car brand to recover the radio unlock code.</p>
+
+    <div class="grid">
+      <a class="tile" href="ford/">
+        <div class="icon">🔵</div>
+        <div class="brand">Ford</div>
+        <div class="desc">Look up the code from your radio serial (M or V + 6 digits).</div>
+      </a>
+      <a class="tile" href="renault/">
+        <div class="icon">🔶</div>
+        <div class="brand">Renault</div>
+        <div class="desc">Generate the code from your pre-code (a letter + 3 digits).</div>
+      </a>
+    </div>
+
+    <footer>Everything runs in your browser — no data leaves your device.</footer>
+  </main>
+</body>
+</html>

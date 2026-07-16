@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ford Radio Code Calculator</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #131a2e;
+      --accent: #2f6bff;
+      --accent-2: #1e4fd0;
+      --text: #e7ecf7;
+      --muted: #8a97b3;
+      --ok: #2ecc71;
+      --err: #ff5c6c;
+      --border: #24304d;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(1200px 600px at 50% -10%, #16234a 0%, var(--bg) 60%);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+    }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.4rem;
+      letter-spacing: 0.3px;
+    }
+    .sub {
+      margin: 0 0 22px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .row { display: flex; gap: 10px; }
+    input[type="text"] {
+      flex: 1;
+      background: #0d1424;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      padding: 14px 16px;
+      font-size: 1.1rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input[type="text"]:focus { border-color: var(--accent); }
+    button {
+      background: linear-gradient(180deg, var(--accent), var(--accent-2));
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0 20px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter 0.15s, opacity 0.15s;
+    }
+    button:hover { filter: brightness(1.08); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .hint {
+      margin-top: 10px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .result {
+      margin-top: 22px;
+      min-height: 92px;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      text-align: center;
+    }
+    .result .label { font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; }
+    .result .code {
+      font-size: 2.6rem;
+      font-weight: 700;
+      letter-spacing: 10px;
+      color: var(--ok);
+      font-variant-numeric: tabular-nums;
+    }
+    .result.error .code { color: var(--err); font-size: 1rem; letter-spacing: normal; font-weight: 500; }
+    .status {
+      margin-top: 16px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    footer {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <p style="margin:0 0 14px"><a href="../" style="color:#8a97b3;text-decoration:none;font-size:0.85rem">&larr; All calculators</a></p>
+    <h1>Ford Radio Code Calculator</h1>
+    <p class="sub">Enter your radio serial number to recover the unlock code.</p>
+
+    <form id="form">
+      <label for="serial">Serial number (M or V + 6 digits)</label>
+      <div class="row">
+        <input id="serial" type="text" maxlength="7" placeholder="M123456"
+               autocomplete="off" spellcheck="false" inputmode="latin" />
+        <button id="go" type="submit" disabled>Get code</button>
+      </div>
+      <p class="hint">Example: <strong>M123456</strong> or <strong>V045621</strong></p>
+    </form>
+
+    <div id="result" class="result" hidden>
+      <div class="label">Unlock code</div>
+      <div class="code" id="code">----</div>
+    </div>
+
+    <div class="status" id="status">Loading code database…</div>
+
+    <footer>Runs entirely in your browser — no data leaves your device.</footer>
+  </main>
+
+  <script>
+    const BIN_URL = "fordradiocodes.bin";
+    const V_OFFSET = 2000000; // byte offset where V-series data starts
+
+    const serialInput = document.getElementById("serial");
+    const goBtn = document.getElementById("go");
+    const form = document.getElementById("form");
+    const resultBox = document.getElementById("result");
+    const codeEl = document.getElementById("code");
+    const statusEl = document.getElementById("status");
+
+    let view = null; // DataView over the .bin
+
+    async function loadDatabase() {
+      try {
+        const res = await fetch(BIN_URL);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const buf = await res.arrayBuffer();
+        view = new DataView(buf);
+        statusEl.textContent =
+          "Database ready (" + (buf.byteLength / 1e6).toFixed(1) + " MB).";
+        goBtn.disabled = false;
+      } catch (err) {
+        statusEl.textContent =
+          "Failed to load database (" + err.message + "). " +
+          "Make sure fordradiocodes.bin is next to this page.";
+      }
+    }
+
+    function showError(msg) {
+      resultBox.hidden = false;
+      resultBox.classList.add("error");
+      codeEl.textContent = msg;
+    }
+
+    function showCode(code) {
+      resultBox.hidden = false;
+      resultBox.classList.remove("error");
+      codeEl.textContent = code;
+    }
+
+    function lookup(serial) {
+      serial = serial.trim().toUpperCase();
+      const match = /^([MV])(\d{6})$/.exec(serial);
+      if (!match) {
+        showError("Invalid serial. Use M or V followed by exactly 6 digits.");
+        return;
+      }
+      const series = match[1];
+      const index = parseInt(match[2], 10);
+
+      let offset = index * 2;
+      if (series === "V") offset += V_OFFSET;
+
+      if (!view || offset + 2 > view.byteLength) {
+        showError("Serial index is out of range.");
+        return;
+      }
+
+      const value = view.getUint16(offset, true); // little-endian
+      showCode(String(value).padStart(4, "0"));
+    }
+
+    serialInput.addEventListener("input", () => {
+      serialInput.value = serialInput.value.toUpperCase().replace(/[^MV0-9]/g, "");
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!view) return;
+      lookup(serialInput.value);
+    });
+
+    loadDatabase();
+  </script>
+</body>
+</html>
