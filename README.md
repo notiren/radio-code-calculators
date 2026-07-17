@@ -46,8 +46,7 @@ docs/
    └─ index.html              Renault calculator
 ```
 
-To enable: **Settings → Pages → Source: Deploy from a branch**, branch `main`,
-folder `/docs`. The site will be at
+The site is live at
 [https://notiren.github.io/radio-code-calculators/](https://notiren.github.io/radio-code-calculators/).
 
 ## Local development
